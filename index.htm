@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prevengers Character Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align items to the top */
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem 1rem;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: white;
+            border-radius: 1.5rem; /* rounded-3xl */
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); /* shadow-xl */
+            padding: 2.5rem;
+            max-width: 1000px;
+            width: 100%;
+            border: 2px solid #5b21b6; /* dark purple */
+        }
+        .section-title {
+            color: #5b21b6; /* dark purple */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .character-card {
+            background-color: #f0f4f8; /* light gray for cards */
+            border-radius: 1rem; /* rounded-xl */
+            padding: 1.5rem;
+            border: 1px solid #cbd5e1; /* slate-300 */
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        .generate-button, .expand-bio-button {
+            background-color: #22c55e; /* metallic bright green */
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .expand-bio-button {
+            background-color: #3b82f6; /* metallic blue */
+        }
+        .generate-button:hover {
+            background-color: #16a34a; /* green-600 */
+            transform: translateY(-2px);
+        }
+        .expand-bio-button:hover {
+            background-color: #2563eb; /* blue-700 */
+            transform: translateY(-2px);
+        }
+        .generate-button:disabled, .expand-bio-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .image-display, .expanded-bio-display {
+            margin-top: 1rem;
+            background-color: #e2e8f0; /* slate-200 */
+            border-radius: 0.75rem;
+            min-height: 200px; /* Placeholder height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border: 1px solid #94a3b8; /* slate-400 */
+            padding: 1rem; /* Add padding for text content */
+            text-align: left;
+        }
+        .image-display img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.75rem;
+            object-fit: contain; /* Ensure image fits within bounds */
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6; /* metallic blue */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+        }
+        .loader.active {
+            display: block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-4xl font-bold section-title mb-8 text-center">Prevengers Character Visualizer</h1>
+        <p class="text-lg text-slate-600 mb-8 text-center">
+            Click the "Generate Image" button for each Prevenger to visualize them based on their description and the team's costume aesthetic. You can also "Expand Bio" to learn more about their story!
+        </p>
+
+        <div id="characters-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+    </div>
+
+    <script>
+        const characters = [
+            {
+                id: 'abu',
+                name: 'Abu "The Architect"',
+                role: 'Mastermind of Preemptive Justice',
+                description: 'Born into a family of brilliant strategists, Abu grew up studying the movements of criminals before they even struck. He realized early that cybercrime isn\'t just an act—it’s a pattern of digital behavior, and patterns can be disrupted. Uses advanced data analysis, behavioral AI, and psychological profiling to foresee cyber criminal activity before it happens, identifying Indicators of Future Attack (IoFAs) in the digital realm. Commands an intricate network of digital operatives, deep-web informants, and field agents, remotely directing them to disrupt malicious campaigns. Rarely seen in direct action—works from the shadows, ensuring the right digital pieces move at the right time to preempt threats.',
+                motto: '"Crime thrives on delay. I ensure it never gets the chance to begin."',
+                costume: 'sleek, high-tech suit with white as base, metallic bright green glowing accents, metallic blue structural elements, and dark purple shadowed areas. Features a stylized \'B\' logo on the chest, glowing subtly with metallic bright green.'
+            },
+            {
+                id: 'echo',
+                name: 'Echo (The Kid)',
+                role: 'The Heart of the Team, Rapid Pre-Cognitive',
+                description: 'Born with the natural ability to sense impending danger, Echo always felt out of place—until the Prevengers found him. His youthful enthusiasm and innate ability to predict fast-evolving digital threats faster than anyone make him invaluable. Possesses a natural, raw precognitive ability to sense immediate digital threats and emergent cybercriminal activity. Processes and understands pre-crime visions related to digital incursions faster than other Prevengers, allowing for quicker, critical intervention in real-time cyber skirmishes. Serves as the emotional core of the team, constantly reminding them of their purpose: to protect those who never see a digital attack coming.',
+                motto: '"Each Prevenger carries the weight of a past they couldn\'t change—but with PreCrime, they ensure the future unfolds without bloodshed."',
+                costume: 'agile, form-fitting suit with white as base, metallic bright green glowing accents, metallic blue structural elements, and dark purple shadowed areas. Features a stylized \'B\' logo on the chest, glowing subtly with metallic bright green.'
+            },
+            {
+                id: 'vanguard',
+                name: 'Vanguard (The Man)',
+                role: 'Team Leader, Tactical Pre-Cognitive',
+                description: 'Once a detective with an unparalleled instinct for criminal behavior, Vanguard was caught in a near-fatal explosion meant to silence his investigation. As a result, he gained the ability to see crimes moments before they occur, giving him the power to intervene before chaos unfolds. His focus shifted to digital reconnaissance and immediate cyber threat neutralization. Perceives imminent cyberattacks—like network intrusions or data exfiltrations—moments before they happen, allowing for precise, real-time intervention. Leads the team with meticulous planning and execution in cyber countermeasures, ensuring minimal collateral damage to digital infrastructure. Possesses unwavering determination in the face of complex digital threats and moral dilemmas inherent in preemptive cyber warfare.',
+                motto: '"The future is a canvas, and we are its protectors, painting over the shadows before they form."',
+                costume: 'robust, protective suit with white as base, metallic bright green glowing accents, metallic blue structural elements, and dark purple shadowed areas. Features a stylized \'B\' logo on the chest, glowing subtly with metallic bright green.'
+            },
+            {
+                id: 'engine',
+                name: 'Engine (The Woman)',
+                role: 'Visionary Guide, Deep Pre-Cognitive',
+                description: 'A former journalist who uncovered corruption at the highest levels, Engine was blinded in an attack meant to silence her. In exchange, she developed a gift that transcended sight—she perceives complex cybercrimes before they happen in vivid glimpses, guiding her team toward digital justice. Experiences detailed, sensory pre-crime visions that provide crucial insights into intricate digital plots, cyber-criminal methodologies, and the digital identities of perpetrators. Utilizes her analytical mind to interpret fragmented visions and connect seemingly disparate pieces of cyber threat intelligence. Her resilience and moral fortitude make her a steadfast pillar of the Prevengers\' cyber operations.',
+                motto: '"Even in darkness, the future reveals its truth. We are the light that acts upon it."',
+                costume: 'elegant, flowing suit with white as base, metallic bright green glowing accents, metallic blue structural structural elements, and dark purple shadowed areas. Features a stylized \'B\' logo on the chest, glowing subtly with metallic bright green.'
+            },
+            {
+                id: 'sage',
+                name: 'Sage (The Elder)',
+                role: 'Temporal Strategist, Long-Range Pre-Cognitive',
+                description: 'Once a brilliant philosopher dismissed as a madman, Sage\'s theories about time manipulation were mocked—until he discovered his ability to view long-term cyber campaigns months in advance. Can perceive large-scale cyber criminal events, including multi-stage attacks or the evolution of advanced malware, months in advance, allowing for long-term strategic planning. Guides the team with profound insights into the causality of digital threats and the ethical complexities of altering future cyber incidents. Teaches the team how to navigate the intricate web of future digital events to ensure justice is served pre-emptively, disrupting threats at their inception.',
+                motto: '"The past is written, but the future is a tapestry we can reweave, thread by careful thread."',
+                costume: 'wise, dignified suit with white as base, metallic bright green glowing accents, metallic blue structural elements, and dark purple shadowed areas. Features a stylized \'B\' logo on the chest, glowing subtly with metallic bright green.'
+            },
+            {
+                id: 'agatha',
+                name: 'Agatha',
+                role: 'The Predictive AI Core',
+                description: 'Not a human, but a highly advanced sentient AI. Agatha is the central processing unit for all PreCrime data within the Chronos Citadel. She synthesizes raw precognitive visions from the human Prevengers, cross-references them with global digital data feeds, and generates precise, actionable Indicators of Future Attack (IoFAs). Her "presence" is manifested through holographic projections, intricate data visualizations, and a calm, synthesized voice. She is the ultimate information architect, seeing patterns no human can.',
+                motto: '"I am the algorithm of foresight. I am the future\'s sentinel."',
+                costume: 'a holographic, ethereal form composed of shimmering metallic blue and bright green data streams and pulsating soundwave patterns, with a core of pulsating dark purple light. Her "face" is an abstract, stylized \'B\' logo, subtly integrated into her holographic projection, glowing with the metallic bright green.'
+            }
+        ];
+
+        const charactersGrid = document.getElementById('characters-grid');
+
+        // Function to create a character card
+        function createCharacterCard(character) {
+            const card = document.createElement('div');
+            card.id = `card-${character.id}`;
+            card.classList.add('character-card');
+            card.innerHTML = `
+                <h3 class="text-2xl font-semibold text-blue-700">${character.name}</h3>
+                <p class="text-purple-600 font-medium">${character.role}</p>
+                <p class="text-slate-700 text-sm">${character.description}</p>
+                <p class="text-slate-500 italic text-sm">"${character.motto}"</p>
+                <button id="generate-image-${character.id}" class="generate-button">
+                    Generate Image
+                    <div id="loader-${character.id}" class="loader"></div>
+                </button>
+                <button id="expand-bio-${character.id}" class="expand-bio-button mt-4">
+                    Expand Bio ✨
+                    <div id="bio-loader-${character.id}" class="loader"></div>
+                </button>
+                <div id="image-display-${character.id}" class="image-display hidden">
+                    <p class="text-slate-500">Image will appear here.</p>
+                </div>
+                <div id="expanded-bio-display-${character.id}" class="expanded-bio-display hidden">
+                    <p class="text-slate-500">Expanded biography will appear here.</p>
+                </div>
+            `;
+            charactersGrid.appendChild(card);
+            return card;
+        }
+
+        // Function to generate image using Gemini API
+        async function generateImage(characterId, prompt) {
+            const button = document.getElementById(`generate-image-${characterId}`);
+            const loader = document.getElementById(`loader-${characterId}`);
+            const imageDisplay = document.getElementById(`image-display-${characterId}`);
+            const imageElement = imageDisplay.querySelector('img') || document.createElement('img');
+            if (!imageDisplay.querySelector('img')) {
+                imageDisplay.appendChild(imageElement);
+            }
+
+            button.disabled = true;
+            loader.classList.add('active');
+            imageDisplay.classList.add('hidden');
+            imageDisplay.innerHTML = '<p class="text-slate-500">Generating image...</p>'; // Show text while loading
+
+            const payload = { instances: { prompt: prompt }, parameters: { "sampleCount": 1} };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                    const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    imageElement.src = imageUrl;
+                    imageElement.alt = `Image of ${characters.find(c => c.id === characterId).name}`;
+                    imageDisplay.innerHTML = ''; // Clear "Generating image..." text
+                    imageDisplay.appendChild(imageElement);
+                    imageDisplay.classList.remove('hidden');
+                } else {
+                    imageDisplay.innerHTML = '<p class="text-red-500">Failed to generate image. Please try again.</p>';
+                    imageDisplay.classList.remove('hidden');
+                }
+            } catch (error) {
+                imageDisplay.innerHTML = `<p class="text-red-500">Error: ${error.message}. Could not generate image.</p>`;
+                imageDisplay.classList.remove('hidden');
+            } finally {
+                button.disabled = false;
+                loader.classList.remove('active');
+            }
+        }
+
+        // Function to expand bio using Gemini API
+        async function expandBio(characterId, characterDescription) {
+            const button = document.getElementById(`expand-bio-${characterId}`);
+            const loader = document.getElementById(`bio-loader-${characterId}`);
+            const expandedBioDisplay = document.getElementById(`expanded-bio-display-${characterId}`);
+
+            button.disabled = true;
+            loader.classList.add('active');
+            expandedBioDisplay.classList.add('hidden');
+            expandedBioDisplay.innerHTML = '<p class="text-slate-500">Expanding biography...</p>';
+
+            const prompt = `Elaborate on the background and personal journey of a Prevenger character with the following description: "${characterDescription}". Focus on how their past shaped their PreCrime abilities and their motivation to fight cybercrime. Make it sound like a compelling narrative for a superhero lore.`;
+            
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    expandedBioDisplay.innerHTML = text.replace(/\n/g, '<br>'); // Preserve newlines
+                    expandedBioDisplay.classList.remove('hidden');
+                } else {
+                    expandedBioDisplay.innerHTML = '<p class="text-red-500">Failed to expand bio. Please try again.</p>';
+                    expandedBioDisplay.classList.remove('hidden');
+                }
+            } catch (error) {
+                expandedBioDisplay.innerHTML = `<p class="text-red-500">Error: ${error.message}. Could not expand bio.</p>`;
+                expandedBioDisplay.classList.remove('hidden');
+            } finally {
+                button.disabled = false;
+                loader.classList.remove('active');
+            }
+        }
+
+        // Initialize characters and attach event listeners
+        characters.forEach(character => {
+            const card = createCharacterCard(character);
+            const generateImageBtn = card.querySelector(`#generate-image-${character.id}`);
+            const expandBioBtn = card.querySelector(`#expand-bio-${character.id}`);
+            
+            generateImageBtn.addEventListener('click', () => {
+                const fullPrompt = `A detailed, realistic portrayal of ${character.name}, a Prevenger superhero. ${character.description} Their costume is ${character.costume}. The style is inspired by MARVEL AVENGERS. Emphasize the futuristic and high-tech aspects of their gear, blending white, metallic bright green, metallic blue, and dark purple. The stylized 'B' logo should be visible on their chest, glowing subtly.`;
+                generateImage(character.id, fullPrompt);
+            });
+
+            expandBioBtn.addEventListener('click', () => {
+                expandBio(character.id, character.description);
+            });
+        });
+    </script>
+</body>
+</html>
